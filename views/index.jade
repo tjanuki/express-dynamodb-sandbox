@@ -1,0 +1,63 @@
+extends layout
+
+block content
+    .jumbotron.p-5.mb-4.bg-light.rounded-3
+        h1.display-4 #{title}
+        p.lead This is a sandbox project with Express, DynamoDB, Node.js with Bluebird, Joi, Vogels, and Jade
+        hr.my-4
+        p.mb-3 Use the API endpoints to interact with the User model in DynamoDB
+
+        .card.mb-4
+            .card-header API Endpoints
+            .card-body
+                table.table.table-striped
+                    thead
+                        tr
+                            th Method
+                            th Endpoint
+                            th Description
+                    tbody
+                        tr
+                            td GET
+                            td /api/users
+                            td List all users
+                        tr
+                            td GET
+                            td /api/users/:id
+                            td Get user by ID
+                        tr
+                            td POST
+                            td /api/users
+                            td Create a new user
+                        tr
+                            td PUT
+                            td /api/users/:id
+                            td Update a user
+                        tr
+                            td DELETE
+                            td /api/users/:id
+                            td Delete a user
+
+        .row
+            .col-md-6
+                .card
+                    .card-header Create User
+                    .card-body
+                        form#createUserForm
+                            .mb-3
+                                label.form-label(for='email') Email
+                                input#email.form-control(type='email', required)
+                            .mb-3
+                                label.form-label(for='name') Name
+                                input#name.form-control(type='text', required)
+                            .mb-3
+                                label.form-label(for='age') Age
+                                input#age.form-control(type='number', min='18', max='120')
+                            button.btn.btn-primary(type='submit') Create User
+
+            .col-md-6
+                .card
+                    .card-header User List
+                    .card-body
+                        #userList
+                            p Loading users...

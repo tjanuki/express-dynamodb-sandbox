@@ -32,3 +32,9 @@ coverage/
 *.swp
 *.swo
 .DS_Store
+
+# DynamoDB Local files
+dynamodb/
+dynamodb_local_latest.tar.gz
+/dynamodb-local-metadata.json
+/shared-local-instance.db

@@ -2,7 +2,6 @@
 
 const bluebird = require('bluebird');
 const Joi = require('joi');
-const { User } = require('../models');
 const { v4: uuidv4 } = require('uuid');
 
 // Validation schema for creating a user
@@ -38,18 +37,19 @@ const UserService = {
         id: uuidv4(),
         email: value.email,
         name: value.name,
-        age: value.age
+        age: value.age,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
 
       // Save user to DynamoDB
-      return new Promise((resolve, reject) => {
-        User.create(user, (err, data) => {
-          if (err) {
-            return reject(err);
-          }
-          resolve(data.attrs);
-        });
-      });
+      const params = {
+        TableName: 'User',
+        Item: user
+      };
+
+      return dynamoDb.put(params).promise()
+          .then(() => user);
     });
   },
 
@@ -59,19 +59,19 @@ const UserService = {
    * @returns {Promise<Object>} - User object
    */
   getUserById: (id) => {
-    return new Promise((resolve, reject) => {
-      User.get(id, (err, data) => {
-        if (err) {
-          return reject(err);
-        }
+    const params = {
+      TableName: 'User',
+      Key: { id }
+    };
 
-        if (!data) {
-          return reject(new Error('User not found'));
-        }
+    return dynamoDb.get(params).promise()
+        .then(result => {
+          if (!result.Item) {
+            throw new Error('User not found');
+          }
 
-        resolve(data.attrs);
-      });
-    });
+          return result.Item;
+        });
   },
 
   /**
@@ -80,16 +80,23 @@ const UserService = {
    * @returns {Promise<Object>} - User object
    */
   getUserByEmail: (email) => {
-    return new Promise((resolve, reject) => {
-      User.getByEmail(email)
-        .then(data => {
-          if (!data || data.Count === 0) {
-            return reject(new Error('User not found'));
+    const params = {
+      TableName: 'User',
+      IndexName: 'EmailIndex',
+      KeyConditionExpression: 'email = :email',
+      ExpressionAttributeValues: {
+        ':email': email
+      }
+    };
+
+    return dynamoDb.query(params).promise()
+        .then(result => {
+          if (!result.Items || result.Items.length === 0) {
+            throw new Error('User not found');
           }
-          resolve(data.Items[0].attrs);
-        })
-        .catch(err => reject(err));
-    });
+
+          return result.Items[0];
+        });
   },
 
   /**
@@ -106,16 +113,33 @@ const UserService = {
         throw new Error(`Validation error: ${error.message}`);
       }
 
-      // Update user
-      return new Promise((resolve, reject) => {
-        User.update({ id, ...value }, (err, data) => {
-          if (err) {
-            return reject(err);
-          }
+      // Check if user exists
+      return UserService.getUserById(id)
+          .then(existingUser => {
+            // Prepare update expression
+            let updateExpression = 'SET updatedAt = :updatedAt';
+            let expressionAttributeValues = {
+              ':updatedAt': new Date().toISOString()
+            };
 
-          resolve(data.attrs);
-        });
-      });
+            // Add update fields
+            Object.keys(value).forEach(key => {
+              updateExpression += `, ${key} = :${key}`;
+              expressionAttributeValues[`:${key}`] = value[key];
+            });
+
+            // Update user
+            const params = {
+              TableName: 'User',
+              Key: { id },
+              UpdateExpression: updateExpression,
+              ExpressionAttributeValues: expressionAttributeValues,
+              ReturnValues: 'ALL_NEW'
+            };
+
+            return dynamoDb.update(params).promise()
+                .then(result => result.Attributes);
+          });
     });
   },
 
@@ -125,15 +149,17 @@ const UserService = {
    * @returns {Promise<boolean>} - Success flag
    */
   deleteUser: (id) => {
-    return new Promise((resolve, reject) => {
-      User.destroy(id, (err) => {
-        if (err) {
-          return reject(err);
-        }
+    // Check if user exists
+    return UserService.getUserById(id)
+        .then(() => {
+          const params = {
+            TableName: 'User',
+            Key: { id }
+          };
 
-        resolve(true);
-      });
-    });
+          return dynamoDb.delete(params).promise()
+              .then(() => true);
+        });
   },
 
   /**
@@ -141,15 +167,12 @@ const UserService = {
    * @returns {Promise<Array>} - List of users
    */
   listUsers: () => {
-    return new Promise((resolve, reject) => {
-      User.scan().exec((err, data) => {
-        if (err) {
-          return reject(err);
-        }
+    const params = {
+      TableName: 'User'
+    };
 
-        resolve(data.Items.map(item => item.attrs));
-      });
-    });
+    return dynamoDb.scan(params).promise()
+        .then(result => result.Items || []);
   }
 };
 

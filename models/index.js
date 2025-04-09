@@ -1,8 +1,8 @@
 'use strict';
 
-const User = require('./user');
+// We're not using Vogels models directly
+// This file is kept for compatibility with existing code structure
 
-// Initialize models and export
 module.exports = {
-    User
+    // No model exports
 };

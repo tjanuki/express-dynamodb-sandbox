@@ -7,29 +7,27 @@ const express = require('express');
 const path = require('path');
 const logger = require('morgan');
 const bodyParser = require('body-parser');
-const bluebird = require('bluebird');
-const vogels = require('vogels');
-
-// Configure vogels to use bluebird promises
-vogels.Promise = bluebird;
+const AWS = require('aws-sdk');
 
 // Configure AWS for DynamoDB
-const AWS = require('aws-sdk');
-AWS.config.update({
+const config = {
     region: process.env.AWS_REGION || 'us-east-1',
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-});
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'fakeMyKeyId',
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'fakeSecretAccessKey'
+};
 
 // If using DynamoDB local
-if (process.env.DYNAMODB_LOCAL) {
+if (process.env.DYNAMODB_LOCAL === 'true') {
     console.log('Using DynamoDB Local');
-    AWS.config.update({
-        endpoint: process.env.DYNAMODB_LOCAL_ENDPOINT || 'http://localhost:8000'
-    });
+    config.endpoint = process.env.DYNAMODB_LOCAL_ENDPOINT || 'http://localhost:8000';
 }
 
-vogels.AWS.config.update(AWS.config);
+// Update AWS config
+AWS.config.update(config);
+
+// Make AWS SDK available globally
+global.AWS = AWS;
+global.dynamoDb = new AWS.DynamoDB.DocumentClient();
 
 // Initialize Express app
 const app = express();

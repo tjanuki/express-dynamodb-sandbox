@@ -3,17 +3,18 @@
 const vogels = require('vogels');
 const Joi = require('joi');
 
-// Define User schema with validation using Joi
+// Use the vogels Joi instance to avoid compatibility issues
+const joiVogels = vogels.Joi;
+
+// Define User schema with validation using Vogels' Joi
 const User = vogels.define('User', {
     hashKey: 'id',
     timestamps: true,
     schema: {
-        id: Joi.string().required(),
-        email: Joi.string().email().required(),
-        name: Joi.string().required(),
-        age: Joi.number().integer().min(18).max(120),
-        createdAt: Joi.date(),
-        updatedAt: Joi.date()
+        id: joiVogels.string().required(),
+        email: joiVogels.string().email().required(),
+        name: joiVogels.string().required(),
+        age: joiVogels.number().integer().min(18).max(120)
     },
     indexes: [
         {

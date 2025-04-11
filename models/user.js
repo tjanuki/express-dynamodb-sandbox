@@ -14,6 +14,7 @@ const User = vogels.define('User', {
         id: joiVogels.string().required(),
         email: joiVogels.string().email().required(),
         name: joiVogels.string().required(),
+        password: joiVogels.string().required(),
         age: joiVogels.number().integer().min(18).max(120)
     },
     indexes: [

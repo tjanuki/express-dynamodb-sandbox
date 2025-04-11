@@ -8,6 +8,7 @@ const path = require('path');
 const logger = require('morgan');
 const bodyParser = require('body-parser');
 const AWS = require('aws-sdk');
+const passport = require('./configs/auth/passport');
 
 // Configure AWS for DynamoDB
 const config = {
@@ -41,6 +42,7 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(passport.initialize());
 
 // Routes
 const routes = require('./routes');

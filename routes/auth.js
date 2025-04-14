@@ -47,4 +47,24 @@ router.post('/login', (req, res, next) => {
     })(req, res, next);
 });
 
+/**
+ * POST /auth/change-password
+ * Change user password
+ */
+router.post('/change-password', passport.authenticate('jwt', { session: false }), (req, res, next) => {
+    const { currentPassword, newPassword } = req.body;
+
+    UserService.updatePassword(req.user.id, currentPassword, newPassword)
+        .then(() => {
+            res.json({ success: true, message: 'Password changed successfully' });
+        })
+        .catch(err => {
+            if (err.message === 'Current password is incorrect' ||
+                err.message.startsWith('Validation error')) {
+                return res.status(400).json({ error: err.message });
+            }
+            next(err);
+        });
+});
+
 module.exports = router;

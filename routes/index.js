@@ -21,4 +21,9 @@ router.use('/api/auth', authRoutes);
 // Mount user routes
 router.use('/api/users', userRoutes);
 
+// Main route
+router.get('/', (req, res) => {
+    res.render('index', { title: 'Express DynamoDB Sandbox' });
+});
+
 module.exports = router;

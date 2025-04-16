@@ -57,6 +57,7 @@ app.use((req, res, next) => {
 
 // Error handler - general
 app.use((err, req, res, next) => {
+    console.error('Error:', err);
     res.status(err.status || 500);
     res.render('error', {
         message: err.message,

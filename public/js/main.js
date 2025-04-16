@@ -53,19 +53,31 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update UI for logged out state
     function updateUIForLoggedOutUser() {
         // Hide user profile
-        userProfile.classList.add('d-none');
+        if (userProfile) {
+            userProfile.classList.add('d-none');
+        }
 
         // Update authentication-required areas
         document.querySelectorAll('.auth-required').forEach(element => {
-            element.querySelector('.auth-required-message').classList.remove('d-none');
-            element.querySelector('.form-content').classList.add('d-none');
+            const authMessage = element.querySelector('.auth-required-message');
+            const formContent = element.querySelector('.form-content');
+
+            if (authMessage) authMessage.classList.remove('d-none');
+            if (formContent) formContent.classList.add('d-none');
         });
 
         // Show login/register forms
-        loginForm.classList.remove('d-none');
-        document.querySelector('#loginForm').previousElementSibling.textContent = 'Login';
-        registerForm.classList.remove('d-none');
-        document.querySelector('#registerForm').previousElementSibling.textContent = 'Register New User';
+        if (loginForm) {
+            loginForm.classList.remove('d-none');
+            const loginHeader = document.querySelector('#loginForm').previousElementSibling;
+            if (loginHeader) loginHeader.textContent = 'Login';
+        }
+
+        if (registerForm) {
+            registerForm.classList.remove('d-none');
+            const registerHeader = document.querySelector('#registerForm').previousElementSibling;
+            if (registerHeader) registerHeader.textContent = 'Register New User';
+        }
     }
 
     // Register a new user
@@ -106,8 +118,18 @@ document.addEventListener('DOMContentLoaded', function() {
             body: JSON.stringify(credentials)
         })
             .then(response => {
+                // Check if the response is JSON
+                const contentType = response.headers.get('content-type');
+                const isJson = contentType && contentType.includes('application/json');
+
                 if (!response.ok) {
-                    return response.json().then(err => { throw new Error(err.error || 'Login failed'); });
+                    if (isJson) {
+                        return response.json().then(err => {
+                            throw new Error(err.error || 'Login failed');
+                        });
+                    } else {
+                        throw new Error('Server error: ' + response.status);
+                    }
                 }
                 return response.json();
             })

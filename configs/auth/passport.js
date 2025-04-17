@@ -10,7 +10,7 @@ const UserService = require('../../services/user-service');
 
 // Setup local strategy (username/password login)
 passport.use(new LocalStrategy({
-    usernameField: 'email',  // Use email as the username field
+    usernameField: 'email',
     passwordField: 'password'
 }, async (email, password, done) => {
     try {
@@ -24,6 +24,12 @@ passport.use(new LocalStrategy({
 
         // No user found with that email
         if (!user) {
+            return done(null, false, { message: 'Invalid email or password' });
+        }
+
+        // Check if password field exists in the user record
+        if (!user.password) {
+            console.log(`User ${email} found but has no password field`);
             return done(null, false, { message: 'Invalid email or password' });
         }
 
